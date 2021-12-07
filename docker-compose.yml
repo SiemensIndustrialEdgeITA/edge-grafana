@@ -1,0 +1,63 @@
+version: "2.4"
+
+services:
+  edge-grafana:
+    build: 
+      context: ./grafana
+    image: edge-grafana:8.2.5
+    container_name: edge-grafana
+    restart: unless-stopped
+    ports:
+      - 33000:3000
+    environment:
+      - BASE_PATH=edge-grafana/                 # for IE reverse proxy
+      - GF_SECURITY_ADMIN_USER=edge             # main login user
+      - GF_SECURITY_ADMIN_PASSWORD=edge         # main login password
+      - MYSQL_URL=edge-mysql:3306               # mysql datasource parameters
+      - MYSQL_PASSWORD=edge     
+      - MYSQL_USER=edge
+      - MYSQL_DBNAME=edge
+      - INFLUXDB_URL=http://edge-influxdb:8086  # influxdb datasource parameters
+      - INFLUXDB_PASSWORD=edge
+      - INFLUXDB_USER=edge
+      - INFLUXDB_DBNAME=edge
+      - INFLUXDB2_URL=http://edge-influxdb2:8086/  # influxdb v2 datasource parameters
+      - INFLUXDB2_USER=industrialedge
+      - INFLUXDB2_ORG=industrialedge
+      - INFLUXDB2_BUCKET=industrialedge
+      - POSTGRES_URL=edge-postgresql:5432       # postgresql datasource parameters
+      - POSTGRES_PASSWORD=edge     
+      - POSTGRES_USER=edge
+      - POSTGRES_DBNAME=edge
+    volumes:
+      - ./edge-grafana-volume:/var/lib/grafana
+    links:
+      - grafana-static-server
+    mem_limit: 1024mb                           # mandatory field for IE
+    networks:
+      - proxy-redirect                         # default IE network
+
+  grafana-static-server:
+    build: 
+      context: ./static-server
+    image: static-server:0.0.1
+    hostname: grafana-static-server
+    container_name: grafana-static-server
+    restart: always
+    ports:
+      - 33001:5000        
+    volumes:
+      - grafana-static-server-volume:/usr/src/app/public
+    mem_limit: 150mb                           # mandatory field for IE
+    networks:
+      - proxy-redirect                          # default IE network
+
+volumes:
+  edge-grafana-volume:
+    name: edge-grafana-volume
+  grafana-static-server-volume:
+    name: grafana-static-server-volume
+
+networks:
+  proxy-redirect:
+    name: proxy-redirect

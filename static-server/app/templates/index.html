@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Grafana Static Server</title>
+
+    <!-- Javascript Includes -->
+    <script type="text/javascript" src="/js/jquery-3.5.1.min.js"></script>
+    <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Extra CSS -->
+    <link rel="stylesheet" type="text/css" href="/css/bootstrap.min.css">
+
+    <style>
+        body {
+            padding-top: 50px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="jumbotron">
+            <h1>Grafana Static Server</h1>
+            <br>
+            <h3>API App to upload and serve static files like images to Grafana through HTTP.</h3>
+            <br>
+            <h5>To get static files from Grafana or other Edge Apps from internal network:</h5>
+            <h5>https://grafana-static-server:5000/files/[your-file-name-with-extension]> (e.g.
+                https://grafana-static-server:5000/files/105809_2D_0001.jpg).</h5>
+            <h5>To get static files from external network simply use the ip address of your device:</h5>
+            <h5> (e.g.
+                https://192.168.1.10:33001/files/105809_2D_0001.jpg).</h5>
+        </div>
+
+        <div class="jumbotron">
+            <h3>Upload new Files</h3>
+            
+            <form ref='uploadForm' id='uploadForm' action='/upload' method='post' encType="multipart/form-data"
+                target="dummyframe" onsubmit="refreshPage()">
+                <input type="file" class="btn btn-secondary" name="sampleFile" />
+                <input type='submit' class="btn btn-secondary" value='Upload!' />
+            </form>
+            <iframe name="dummyframe" id="dummyframe" style="display: none;"></iframe>
+        </div>
+
+        <div class="jumbotron" id="fileslist-div">
+            <h3>Static Files list</h3>
+            <button type="button" class="btn btn-secondary" id="deletefiles" onclick="deleteAllFiles()">Delete All
+                Static Files</button>
+            <br>
+            <h5>Click on a file to open it in a new tab.</h5>
+            <br>
+            <ul></ul>
+        </div>
+    </div>
+
+</body>
+
+<script>
+    function refreshPage() {
+        setInterval(function () {
+            window.location.reload();
+        }, 1000);
+    }
+
+    // function getContainerIP() {
+    //     $.ajax({
+    //         type: 'GET',
+    //         url: '/networkip',
+    //         dataType: 'json',
+    //         success: function (data) {
+    //             document.getElementById("ipaddressval").value = data.address;
+    //         }
+    //     });
+    // }
+
+    function getFilesList() {
+        $.ajax({
+            type: 'GET',
+            url: '/fileslist',
+            dataType: 'json',
+            success: function (data) {
+                data.files.forEach(function (el) {
+                    //$("ul").append("<li>" + el + "</li>");
+                    $("ul").append('<li><a href="/files/'+ el + '" target="_blank">' +  el + '</a></li>');
+                });
+            }
+        });
+    }
+
+    function deleteAllFiles() {
+        $.ajax({
+            type: 'GET',
+            url: '/filesclean',
+            success: function (data) {
+                console.log(data)
+                refreshPage();
+            }
+        });
+    }
+
+    window.onload = function () {
+        //getContainerIP();
+        getFilesList();
+    }
+</script>
+
+</html>
